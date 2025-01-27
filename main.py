@@ -10,7 +10,7 @@ import socket
 UART_BAUDRATE = 115200
 WIFI_TIMEOUT = 10
 DEFAULT_CONTENT_TYPE = "application/x-www-form-urlencoded"
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 
 class Hardware:
     def __init__(self):
@@ -159,7 +159,7 @@ class PicoJuice:
     def handle_apl(self):
         connected_ssid = self.hw.wlan.config('ssid') if self.hw.wlan.isconnected() else None
         return '\n'.join(
-            f"{'*' if net[0].decode('utf-8') == connected_ssid else ''}{net[0].decode('utf-8')}"
+            f"'{'*' if net[0].decode('utf-8') == connected_ssid else ''}{net[0].decode('utf-8')}"
             for net in self.hw.wlan.scan()
         )
 
