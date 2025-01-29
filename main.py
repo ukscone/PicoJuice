@@ -9,7 +9,7 @@ import socket
 # Core system configuration
 UART_BAUDRATE = 115200        # Communication speed with host
 WIFI_TIMEOUT = 10            # Seconds to wait for WiFi connection
-VERSION = "0.0.3"
+VERSION = "0.0.4"
 
 class Hardware:
     def __init__(self):
@@ -36,6 +36,14 @@ class PicoJuice:
         # Initialize hardware interface
         self.hw = Hardware()
         time.sleep(5)  # Startup delay for system stability. Not required, but why not?.
+        
+        # Create PROGRAMS directory if it doesn't exist
+        try:
+            os.mkdir('PROGRAMS')
+        except OSError:
+            pass
+        
+        # Turn on the LED to indicate the system is ready
         self.hw.led.on()
         
         # Wait for initial handshake. 
@@ -62,11 +70,7 @@ class PicoJuice:
         except:
             pass
         
-        # Create PROGRAMS directory if it doesn't exist
-        try:
-            os.mkdir('PROGRAMS')
-        except OSError:
-            pass
+
         
     def load_bookmarks(self):
         try:
