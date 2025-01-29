@@ -1,4 +1,4 @@
-from machine import Pin
+from machine import Pin, UART
 import network
 import time
 import urequests
@@ -9,7 +9,7 @@ import socket
 # Core system configuration
 UART_BAUDRATE = 115200        # Communication speed with host
 WIFI_TIMEOUT = 10            # Seconds to wait for WiFi connection
-VERSION = "0.0.2"
+VERSION = "0.0.3"
 
 class Hardware:
     def __init__(self):
@@ -25,8 +25,8 @@ class Hardware:
         self.yellow_led.off()
         self.green_led.off()
         
-        # Initialize communication interfaces
-        self.uart = machine.UART(0, baudrate=UART_BAUDRATE)
+        # Initialize UART and WiFi
+        self.uart = UART(0, baudrate=UART_BAUDRATE)
         self.wlan = network.WLAN(network.STA_IF)
         self.wlan.active(True)
         
@@ -34,10 +34,11 @@ class PicoJuice:
     def __init__(self):
         # Initialize hardware interface
         self.hw = Hardware()
-        time.sleep(5)  # Startup delay for system stability
+        time.sleep(5)  # Startup delay for system stability. Not required, but why not?.
         self.hw.led.on()
         
-        # Wait for initial handshake
+        # Wait for initial handshake. 
+        # Yellow LED might also light up during this time.
         while True:
             line = self.read_line()
             if line == "OK":
@@ -50,7 +51,7 @@ class PicoJuice:
         self.bookmarks = {}
         self.load_bookmarks()
         
-        # Attempt to restore previous WiFi connection
+        # Restore previous WiFi connection if possible
         try:
             with open('wifi.json', 'r') as f:
                 creds = json.load(f)
@@ -230,34 +231,33 @@ class PicoJuice:
                 if first_ok:
                     first_ok = False
                 else:
-                    with open(f"{filename}.IJB", 'w') as f:
+                    with open(f"PROGRAMS/{filename}.IJB", 'w') as f:
                         f.write('\n'.join(collected))
                     return "'File saved"
             elif line:
                 collected.append(line)
 
     def handle_dir(self):
-        files = [f for f in os.listdir() if f.endswith('.IJB')]
+        files = [f for f in os.listdir('PROGRAMS') if f.endswith('.IJB')]
         if not files:
             return "'No .IJB files found"
-        return '\n'.join(f"'{f} {os.stat(f)[6]}" for f in files)
+        return '\n'.join(f"'{f} {os.stat('PROGRAMS/' + f)[6]}" for f in files)
 
     def handle_del(self, filename):
         try:
-            os.remove(f"{filename}.IJB")
+            os.remove(f"PROGRAMS/{filename}.IJB")
             return "'File deleted"
         except:
             return "'Error deleting file"
 
     def handle_load(self, filename):
         try:
-            with open(f"{filename}.IJB", 'r') as f:
+            with open(f"PROGRAMS/{filename}.IJB", 'r') as f:
                 for line in f:
                     self.send_response(line.strip())
             return "'File loaded"
         except:
             return "'Error loading file"
-
     def get_mac_address(self):
         mac = self.hw.wlan.config('mac')
         return f"'{''.join([f'{b:02x}' for b in mac])}"
