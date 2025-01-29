@@ -30,6 +30,7 @@ class Hardware:
         self.wlan = network.WLAN(network.STA_IF)
         self.wlan.active(True)
         
+
 class PicoJuice:
     def __init__(self):
         # Initialize hardware interface
@@ -60,7 +61,13 @@ class PicoJuice:
                     self.send_response(f"'Connected to {creds['ssid']}, IP: {ip}")
         except:
             pass
-
+        
+        # Create PROGRAMS directory if it doesn't exist
+        try:
+            os.mkdir('PROGRAMS')
+        except OSError:
+            pass
+        
     def load_bookmarks(self):
         try:
             with open('bookmarks.json', 'r') as f:
